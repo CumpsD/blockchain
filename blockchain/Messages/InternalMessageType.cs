@@ -1,6 +1,6 @@
 ﻿namespace Blockchain.Messages
 {
-    internal enum InternalMessageType
+    public enum InternalMessageType
     {
         Identity,
         Signal,

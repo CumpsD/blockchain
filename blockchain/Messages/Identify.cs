@@ -3,10 +3,16 @@
     using System;
     using System.Text.Json.Serialization;
 
+    public class PeerListRequest : IMessage<PeerListRequest>
+    {
+        public Message<PeerListRequest> CreateMessage()
+            => new(InternalMessageType.PeerListRequest, this);
+    }
+
     /// <summary>
     /// A message by which a peer can identify itself to another.
     /// </summary>
-    internal class Identify : IMessage<Identify>
+    public class Identify : IMessage<Identify>
     {
         // TODO: Turn string into a string value type Identity later
 

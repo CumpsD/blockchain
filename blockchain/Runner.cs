@@ -1,9 +1,7 @@
 ﻿namespace Blockchain
 {
     using System;
-    using System.Buffers;
     using System.Net.WebSockets;
-    using System.Runtime.InteropServices;
     using System.Text.Json;
     using System.Text.Json.Serialization;
     using System.Threading;
@@ -19,7 +17,16 @@
         {
             Converters =
             {
-                new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
+                new JsonStringEnumConverter(JsonNamingPolicy.CamelCase),
+            }
+        };
+
+        private static readonly JsonSerializerOptions _deserializerOptions = new()
+        {
+            Converters =
+            {
+                new JsonStringEnumConverter(JsonNamingPolicy.CamelCase),
+                new MessageConverter()
             }
         };
 
@@ -84,7 +91,10 @@
 
         private async Task Dispatch(WebSocketReceiveResult result, byte[] buffer)
         {
-            var message = JsonSerializer.Deserialize<Message<object>>(new ReadOnlySpan<byte>(buffer, 0, result.Count), _serializerOptions);
+            var message = JsonSerializer.Deserialize<Message>(
+                new ReadOnlySpan<byte>(buffer, 0, result.Count),
+                _deserializerOptions);
+
             _logger.LogDebug("Incoming Message: {@Message}", message);
         }
 
