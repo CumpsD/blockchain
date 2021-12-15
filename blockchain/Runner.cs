@@ -3,6 +3,7 @@
     using System;
     using System.Net.WebSockets;
     using System.Text.Json;
+    using System.Text.Json.Serialization;
     using System.Threading;
     using System.Threading.Tasks;
     using Configuration;
@@ -12,6 +13,14 @@
 
     public class Runner
     {
+        private static readonly JsonSerializerOptions _serializerOptions = new()
+        {
+            Converters =
+            {
+                new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
+            }
+        };
+
         private readonly ILogger<Runner> _logger;
 
         private readonly BlockchainConfiguration _configuration;
@@ -38,22 +47,29 @@
             CancellationToken ct)
         {
             var ws = new ClientWebSocket();
-            await ws.ConnectAsync(new Uri("ws://127.0.0.1:8080"), ct);
+            var peer = "127.0.0.1:8080";
 
+            _logger.LogDebug("Connecting to {Peer}", peer);
+            await ws.ConnectAsync(new Uri($"ws://{peer}"), ct);
+            await Task.Delay(500, ct);
+
+            _logger.LogDebug("Sending identity");
             await SendAsync(
                 new Identify(
-                    identity: "bwBpkJX5VAtFOt2K/DFuJ+KrlkWy2YNDkxe19TKnlCI=",
+                    identity: "GhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGho=",
                     version: 11,
-                    agent: "if/cli/4b3079f",
+                    agent: "csharp",
                     name: "csharp-node",
                     port: 9033,
-                    head: "8fb5b576eb519e03911c8768d7c8ac97252f7be49fec77279c43af2da9f82068",
-                    work: "131072",
-                    sequence: 1),
+                    head: "0000000017996e3b061fb7118db7007084000a28306a285f193b2551854343bd",
+                    work: "1414804792318651",
+                    sequence: 23123),
                 ws,
                 ct);
 
             Console.WriteLine(ws.State);
+
+            Console.ReadLine();
         }
 
         private static async Task SendAsync<T>(
@@ -61,12 +77,9 @@
             WebSocket ws,
             CancellationToken ct)
         {
-            var x = message.CreateMessage();
-            var z = JsonSerializer.Serialize(x);
-
             await ws.SendAsync(
                 new ArraySegment<byte>(
-                    JsonSerializer.SerializeToUtf8Bytes(message.CreateMessage())),
+                    JsonSerializer.SerializeToUtf8Bytes(message.CreateMessage(), _serializerOptions)),
                 WebSocketMessageType.Text,
                 WebSocketMessageFlags.EndOfMessage,
                 ct);

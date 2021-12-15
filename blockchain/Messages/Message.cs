@@ -8,7 +8,6 @@
     {
         // ReSharper disable once MemberCanBePrivate.Global
         [JsonPropertyName("type")]
-        [JsonConverter(typeof(JsonStringEnumConverter))]
         public InternalMessageType Type { get; }
 
         // ReSharper disable once MemberCanBePrivate.Global

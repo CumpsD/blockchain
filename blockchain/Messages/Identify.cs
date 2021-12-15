@@ -3,6 +3,9 @@
     using System;
     using System.Text.Json.Serialization;
 
+    /// <summary>
+    /// A message by which a peer can identify itself to another.
+    /// </summary>
     internal class Identify : IMessage<Identify>
     {
         // TODO: Turn string into a string value type Identity later
@@ -31,6 +34,18 @@
         [JsonPropertyName("sequence")]
         public int Sequence { get; }
 
+        /// <summary>
+        /// A message by which a peer can identify itself to another.
+        /// </summary>
+        /// <param name="identity">A base64-encoded 32-byte public key exposed to other peers on the network.</param>
+        /// <param name="name"></param>
+        /// <param name="version"></param>
+        /// <param name="agent"></param>
+        /// <param name="port"></param>
+        /// <param name="head"></param>
+        /// <param name="work"></param>
+        /// <param name="sequence"></param>
+        /// <exception cref="ArgumentNullException"></exception>
         public Identify(
             string identity,
             string? name,
@@ -52,6 +67,6 @@
         }
 
         public Message<Identify> CreateMessage()
-            => new(InternalMessageType.Identify, this);
+            => new(InternalMessageType.Identity, this);
     }
 }
