@@ -6,21 +6,8 @@
     using System.Text.Json.Serialization;
     using System.Threading;
     using System.Threading.Tasks;
-    using JetBrains.Annotations;
     using Messages;
     using Microsoft.Extensions.Logging;
-
-    [UsedImplicitly]
-    public class PeerFactory
-    {
-        private readonly ILogger<Peer> _logger;
-
-        public PeerFactory(ILogger<Peer> logger)
-            => _logger = logger;
-
-        public Peer GetPeer(string address)
-            => new(_logger, address);
-    }
 
     public class Peer
     {
@@ -41,15 +28,28 @@
             }
         };
 
+        private readonly SemaphoreSlim _sendLock = new(1, 1);
         private readonly ILogger<Peer> _logger;
-        private readonly string _address;
+        private readonly PeerPool _peerPool;
+
+        public string? Identity { get; }
+
+        public string? Name { get; }
+
+        public string Address { get; }
+
+        public int Port { get; }
 
         public Peer(
             ILogger<Peer> logger,
-            string address)
+            PeerPool peerPool,
+            string address,
+            int port)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _address = address ?? throw new ArgumentNullException(nameof(address));
+            _peerPool = peerPool ?? throw new ArgumentNullException(nameof(peerPool));
+            Address = address ?? throw new ArgumentNullException(nameof(address));
+            Port = port;
         }
 
         public async Task ConnectAndListen(
@@ -61,7 +61,7 @@
 
                 try
                 {
-                    await ConnectAsync(_address, ws, ct);
+                    await ConnectAsync($"{Address}:{Port}", ws, ct);
                     await IdentifyAsync(ws, ct);
 
                     while (ws.State == WebSocketState.Open && ct.IsCancellationRequested == false)
@@ -108,8 +108,12 @@
             switch (message.Type)
             {
                 case InternalMessageType.PeerListRequest:
-                    //var peerListRequestMessage = (Message<PeerListRequestMessage>)message;
                     await PeerListAsync(ws, ct);
+                    break;
+
+                case InternalMessageType.PeerList:
+                    var peerListMessage = (Message<PeerListMessage>)message;
+
                     break;
             }
         }
@@ -182,12 +186,21 @@
 
             _logger.LogDebug("Outgoing Message: {@Message}", outgoingMessage);
 
-            await ws.SendAsync(
-                new ArraySegment<byte>(
-                    JsonSerializer.SerializeToUtf8Bytes(outgoingMessage, _serializerOptions)),
-                WebSocketMessageType.Text,
-                WebSocketMessageFlags.EndOfMessage,
-                ct);
+            // Locking because you can only have 1 send at a time for a WS
+            await _sendLock.WaitAsync(ct);
+            try
+            {
+                await ws.SendAsync(
+                    new ArraySegment<byte>(
+                        JsonSerializer.SerializeToUtf8Bytes(outgoingMessage, _serializerOptions)),
+                    WebSocketMessageType.Text,
+                    WebSocketMessageFlags.EndOfMessage,
+                    ct);
+            }
+            finally
+            {
+                _sendLock.Release();
+            }
         }
     }
 }

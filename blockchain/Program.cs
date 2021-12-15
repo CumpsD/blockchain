@@ -96,6 +96,10 @@
                 .SingleInstance();
 
             builder
+                .RegisterType<PeerPool>()
+                .SingleInstance();
+
+            builder
                 .RegisterType<PeerFactory>()
                 .SingleInstance();
 

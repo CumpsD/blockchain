@@ -29,11 +29,11 @@
         {
             _logger.LogInformation("Starting {TaskName}.", nameof(Runner));
 
-            var bootstrapPeer = container
-                .GetRequiredService<PeerFactory>()
-                .GetPeer("127.0.0.1:8080");
+            container
+                .GetRequiredService<PeerPool>()
+                .GetPeer("127.0.0.1", 8080, ct);
 
-            await bootstrapPeer.ConnectAndListen(ct);
+            await Task.Delay(-1, ct);
         }
     }
 }
