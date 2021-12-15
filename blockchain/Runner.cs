@@ -121,7 +121,7 @@
 
             // TODO: Get sensible values
             await SendAsync(
-                new Identify(
+                new IdentityMessage(
                     identity: "GhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGho=",
                     version: 11,
                     agent: "csharp",

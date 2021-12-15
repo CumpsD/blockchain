@@ -3,19 +3,12 @@
     using System;
     using System.Text.Json.Serialization;
 
-    public class PeerListRequest : IMessage<PeerListRequest>
-    {
-        public Message<PeerListRequest> CreateMessage()
-            => new(InternalMessageType.PeerListRequest, this);
-    }
-
     /// <summary>
     /// A message by which a peer can identify itself to another.
     /// </summary>
-    public class Identify : IMessage<Identify>
+    public class IdentityMessage : IMessage<IdentityMessage>
     {
         // TODO: Turn string into a string value type Identity later
-
         [JsonPropertyName("identity")]
         public string Identity { get; }
 
@@ -52,7 +45,7 @@
         /// <param name="work"></param>
         /// <param name="sequence"></param>
         /// <exception cref="ArgumentNullException"></exception>
-        public Identify(
+        public IdentityMessage(
             string identity,
             string? name,
             int version,
@@ -72,7 +65,7 @@
             Sequence = sequence;
         }
 
-        public Message<Identify> CreateMessage()
+        public Message<IdentityMessage> CreateMessage()
             => new(InternalMessageType.Identity, this);
     }
 }

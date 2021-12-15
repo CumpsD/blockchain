@@ -41,11 +41,28 @@
                 throw new JsonException();
 
             var typeDiscriminator = Enum.Parse<InternalMessageType>(readerClone.GetString(), true);
+
             return typeDiscriminator switch
             {
-                InternalMessageType.Identity => JsonSerializer.Deserialize<Message<Identify>>(ref reader, _serializerOptions),
-                InternalMessageType.PeerListRequest => JsonSerializer.Deserialize<Message<PeerListRequest>>(ref reader, _serializerOptions),
-                _ => throw new JsonException()
+                InternalMessageType.Disconnecting
+                    => JsonSerializer.Deserialize<Message<DisconnectingMessage>>(ref reader, _serializerOptions),
+
+                InternalMessageType.Identity
+                    => JsonSerializer.Deserialize<Message<IdentityMessage>>(ref reader, _serializerOptions),
+
+                InternalMessageType.PeerList
+                    => JsonSerializer.Deserialize<Message<PeerListMessage>>(ref reader, _serializerOptions),
+
+                InternalMessageType.PeerListRequest
+                    => JsonSerializer.Deserialize<Message<PeerListRequestMessage>>(ref reader, _serializerOptions),
+
+                InternalMessageType.Signal
+                    => JsonSerializer.Deserialize<Message<SignalMessage>>(ref reader, _serializerOptions),
+
+                InternalMessageType.SignalRequest
+                    => JsonSerializer.Deserialize<Message<SignalRequestMessage>>(ref reader, _serializerOptions),
+
+                _ => JsonSerializer.Deserialize<Message>(ref reader, _serializerOptions),
             };
         }
 
