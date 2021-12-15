@@ -1,6 +1,7 @@
 ﻿namespace Blockchain.Peers
 {
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading;
     using JetBrains.Annotations;
     using Microsoft.Extensions.Logging;
@@ -11,7 +12,7 @@
         private readonly ILogger<PeerPool> _logger;
         private readonly PeerFactory _peerFactory;
 
-        private Dictionary<string, Peer> Peers { get; }= new();
+        private Dictionary<string, Peer> Peers { get; } = new();
 
         public PeerPool(
             ILogger<PeerPool> logger,
@@ -37,5 +38,8 @@
 
             return peer;
         }
+
+        public List<Peer> GetPeers()
+            => Peers.Values.ToList();
     }
 }

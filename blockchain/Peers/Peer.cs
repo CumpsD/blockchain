@@ -1,6 +1,7 @@
 ﻿namespace Blockchain.Peers
 {
     using System;
+    using System.Linq;
     using System.Net.WebSockets;
     using System.Text.Json;
     using System.Text.Json.Serialization;
@@ -32,13 +33,13 @@
         private readonly ILogger<Peer> _logger;
         private readonly PeerPool _peerPool;
 
-        public string? Identity { get; }
+        public string? Identity { get; private set; }
 
-        public string? Name { get; }
+        public string? Name { get; private set; }
 
         public string Address { get; }
 
-        public int Port { get; }
+        public int Port { get; private set; }
 
         public Peer(
             ILogger<Peer> logger,
@@ -93,31 +94,6 @@
             }
         }
 
-        private async Task Dispatch(
-            WebSocketReceiveResult result,
-            byte[] buffer,
-            WebSocket ws,
-            CancellationToken ct)
-        {
-            var message = JsonSerializer.Deserialize<Message>(
-                new ReadOnlySpan<byte>(buffer, 0, result.Count),
-                _deserializerOptions);
-
-            _logger.LogDebug("Incoming Message: {@Message}", message);
-
-            switch (message.Type)
-            {
-                case InternalMessageType.PeerListRequest:
-                    await PeerListAsync(ws, ct);
-                    break;
-
-                case InternalMessageType.PeerList:
-                    var peerListMessage = (Message<PeerListMessage>)message;
-
-                    break;
-            }
-        }
-
         private async Task ConnectAsync(
             string peer,
             ClientWebSocket ws,
@@ -154,6 +130,53 @@
                 ct);
         }
 
+        private async Task Dispatch(
+            WebSocketReceiveResult result,
+            byte[] buffer,
+            WebSocket ws,
+            CancellationToken ct)
+        {
+            var message = JsonSerializer.Deserialize<Message>(
+                new ReadOnlySpan<byte>(buffer, 0, result.Count),
+                _deserializerOptions);
+
+            _logger.LogDebug("Incoming Message: {@Message}", message);
+
+            switch (message.Type)
+            {
+                case InternalMessageType.Identity:
+                    var identityMessage = (Message<IdentityMessage>)message;
+                    HandleIdentity(identityMessage);
+                    break;
+
+                case InternalMessageType.PeerListRequest:
+                    await PeerListAsync(ws, ct);
+                    break;
+
+                case InternalMessageType.PeerList:
+                    var peerListMessage = (Message<PeerListMessage>)message;
+
+                    break;
+            }
+        }
+
+        private void HandleIdentity(Message<IdentityMessage> identityMessage)
+        {
+            var payLoad = identityMessage.Payload;
+
+            _logger.LogDebug(
+                "Updating identity {Identity}",
+                payLoad.Identity);
+
+            Identity = payLoad.Identity;
+
+            if (payLoad.Port.HasValue)
+                Port = payLoad.Port.Value;
+
+            if (payLoad.Name != null)
+                Name = payLoad.Name;
+        }
+
         private async Task PeerListAsync(
             WebSocket ws,
             CancellationToken ct)
@@ -161,18 +184,21 @@
             if (ws.State != WebSocketState.Open)
                 return;
 
-            _logger.LogDebug("Sending peer list");
+            var peers = _peerPool
+                .GetPeers()
+                .Where(peer => peer.Identity != null)
+                .Select(peer =>
+                    new ConnectedPeer(
+                        peer.Identity,
+                        peer.Name,
+                        peer.Address,
+                        peer.Port))
+                .ToArray();
+
+            _logger.LogDebug("Sending peer list (#{TotalPeers})", peers.Length);
 
             await SendAsync(
-                new PeerListMessage(
-                    new[]
-                    {
-                        new ConnectedPeer(
-                            "bwBpkJX5VAtFOt2K/DFuJ+KrlkWy2YNDkxe19TKnlCI=",
-                            "bootstrap",
-                            "test.bn1.ironfish.network",
-                            9033)
-                    }),
+                new PeerListMessage(peers),
                 ws,
                 ct);
         }
