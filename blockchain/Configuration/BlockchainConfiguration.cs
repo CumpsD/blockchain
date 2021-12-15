@@ -11,7 +11,28 @@
         public const string Section = "Blockchain";
 
         [Required, NotNull]
-        public string? Example
+        public string? BootstrapNodeAddress
+        {
+            get;
+            [UsedImplicitly] init;
+        }
+
+        [Required, NotNull]
+        public int? BootstrapNodePort
+        {
+            get;
+            [UsedImplicitly] init;
+        }
+
+        [Required, NotNull]
+        public int? DefaultWebsocketPort
+        {
+            get;
+            [UsedImplicitly] init;
+        }
+
+        [Required, NotNull]
+        public int? UpdatePeerListIntervalInSeconds
         {
             get;
             [UsedImplicitly] init;

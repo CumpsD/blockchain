@@ -31,13 +31,13 @@
         public DisconnectingReason Reason { get; }
 
         [JsonPropertyName("disconnectUntil")]
-        public int DisconnectUntil { get; }
+        public long DisconnectUntil { get; }
 
         public DisconnectingMessage(
             string sourceIdentity,
             string? destinationIdentity,
             DisconnectingReason reason,
-            int disconnectUntil)
+            long disconnectUntil)
         {
             if (!Enum.IsDefined(typeof(DisconnectingReason), reason))
                 throw new InvalidEnumArgumentException(nameof(reason), (int)reason, typeof(DisconnectingReason));

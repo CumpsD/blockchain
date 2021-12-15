@@ -51,7 +51,7 @@
 
                 var runner = container.GetRequiredService<Runner>();
 
-                var runnerTask = runner.StartAsync(container, ct);
+                var runnerTask = runner.StartAsync(ct);
 
                 #if DEBUG
                 Console.WriteLine("Running... Press CTRL + C to exit.");
