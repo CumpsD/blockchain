@@ -70,7 +70,11 @@
                         var result = await ws.ReceiveAsync(buffer, ct);
 
                         if (result.EndOfMessage)
-                            await Dispatch(result, buffer);
+                            await Dispatch(
+                                result,
+                                buffer,
+                                ws,
+                                ct);
                     }
                 }
                 catch (WebSocketException ex)
@@ -89,13 +93,25 @@
             }
         }
 
-        private async Task Dispatch(WebSocketReceiveResult result, byte[] buffer)
+        private async Task Dispatch(
+            WebSocketReceiveResult result,
+            byte[] buffer,
+            WebSocket ws,
+            CancellationToken ct)
         {
             var message = JsonSerializer.Deserialize<Message>(
                 new ReadOnlySpan<byte>(buffer, 0, result.Count),
                 _deserializerOptions);
 
             _logger.LogDebug("Incoming Message: {@Message}", message);
+
+            switch (message.Type)
+            {
+                case InternalMessageType.PeerListRequest:
+                    //var peerListRequestMessage = (Message<PeerListRequestMessage>)message;
+                    await PeerListAsync(ws, ct);
+                    break;
+            }
         }
 
         private async Task ConnectAsync(
@@ -134,14 +150,41 @@
                 ct);
         }
 
-        private static async Task SendAsync<T>(
+        private async Task PeerListAsync(
+            WebSocket ws,
+            CancellationToken ct)
+        {
+            if (ws.State != WebSocketState.Open)
+                return;
+
+            _logger.LogDebug("Sending peer list");
+
+            await SendAsync(
+                new PeerListMessage(
+                    new []
+                    {
+                        new ConnectedPeer(
+                            "bwBpkJX5VAtFOt2K/DFuJ+KrlkWy2YNDkxe19TKnlCI=",
+                            "bootstrap",
+                            "test.bn1.ironfish.network",
+                            9033)
+                    }),
+                ws,
+                ct);
+        }
+
+        private async Task SendAsync<T>(
             IMessage<T> message,
             WebSocket ws,
             CancellationToken ct)
         {
+            var outgoingMessage = message.CreateMessage();
+
+            _logger.LogDebug("Outgoing Message: {@Message}", outgoingMessage);
+
             await ws.SendAsync(
                 new ArraySegment<byte>(
-                    JsonSerializer.SerializeToUtf8Bytes(message.CreateMessage(), _serializerOptions)),
+                    JsonSerializer.SerializeToUtf8Bytes(outgoingMessage, _serializerOptions)),
                 WebSocketMessageType.Text,
                 WebSocketMessageFlags.EndOfMessage,
                 ct);
