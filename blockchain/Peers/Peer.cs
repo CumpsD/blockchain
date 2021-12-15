@@ -36,6 +36,7 @@
         private readonly PeerPool _peerPool;
 
         private ClientWebSocket? _ws;
+        private bool _shouldDisconnect;
 
         public string? Identity { get; private set; }
 
@@ -66,16 +67,19 @@
         public async Task ConnectAndListen(
             CancellationToken ct)
         {
-            while (ct.IsCancellationRequested == false)
+            while (ct.IsCancellationRequested == false && !_shouldDisconnect)
             {
                 try
                 {
                     _ws = new ClientWebSocket();
 
-                    await ConnectAsync($"{Address}:{Port}", ct);
+                    var connected = await ConnectAsync($"{Address}:{Port}", ct);
+                    if (!connected)
+                        continue;
+
                     await IdentityAsync(ct);
 
-                    while (_ws.State == WebSocketState.Open && ct.IsCancellationRequested == false)
+                    while (_ws?.State == WebSocketState.Open && ct.IsCancellationRequested == false)
                     {
                         var buffer = new byte[50000];
                         var result = await _ws.ReceiveAsync(buffer, ct);
@@ -184,6 +188,14 @@
             {
                 _sendLock.Release();
             }
+        }
+
+        public void Disconnect()
+        {
+            _shouldDisconnect = true;
+
+            _ws?.Dispose();
+            _ws = null;
         }
     }
 }

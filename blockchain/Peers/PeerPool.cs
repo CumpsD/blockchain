@@ -36,7 +36,8 @@
                 return;
 
             _logger.LogDebug(
-                "Adding peer {Address}:{Port} ({Identity} / {Name})",
+                "[{Address}] Adding peer {Address}:{Port} ({Identity} / {Name})",
+                address,
                 address,
                 port,
                 identity,
@@ -61,6 +62,29 @@
         {
             foreach (var peer in Peers.Values)
                 peer.PeerListRequestAsync(ct);
+        }
+
+        public void RemovePeer(string? address)
+        {
+            if (address == null)
+                return;
+
+            if (!Peers.ContainsKey(address))
+                return;
+
+            var peer = Peers[address];
+
+            _logger.LogDebug(
+                "[{Address}] Removing peer {Address}:{Port} ({Identity} / {Name})",
+                peer.Address,
+                peer.Address,
+                peer.Port,
+                peer.Identity,
+                string.IsNullOrWhiteSpace(peer.Name) ? "*" : peer.Name);
+
+            Peers.Remove(address);
+
+            peer.Disconnect();
         }
     }
 }
