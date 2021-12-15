@@ -2,6 +2,7 @@
 {
     using System;
     using System.Net.WebSockets;
+    using System.Text;
     using System.Text.Json;
     using System.Text.Json.Serialization;
     using System.Threading;
@@ -108,9 +109,28 @@
             byte[] buffer,
             CancellationToken ct)
         {
-            var message = JsonSerializer.Deserialize<Message>(
-                new ReadOnlySpan<byte>(buffer, 0, result.Count),
-                _deserializerOptions);
+            if (result.MessageType != WebSocketMessageType.Text)
+                return;
+
+            Message? message = null;
+
+            try
+            {
+                message = JsonSerializer.Deserialize<Message>(
+                    new ReadOnlySpan<byte>(buffer, 0, result.Count),
+                    _deserializerOptions);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "[{Address}] Invalid incoming message: {@Message}",
+                    Address,
+                    Encoding.UTF8.GetString(buffer));
+            }
+
+            if (message == null)
+                return;
 
             _logger.LogDebug(
                 "[{Address}] Incoming Message: {@Message}",
