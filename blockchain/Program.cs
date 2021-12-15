@@ -13,6 +13,7 @@
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Modules;
+    using Peers;
     using Serilog;
 
     public class Program
@@ -50,7 +51,7 @@
 
                 var runner = container.GetRequiredService<Runner>();
 
-                var runnerTask = runner.StartAsync(ct);
+                var runnerTask = runner.StartAsync(container, ct);
 
                 #if DEBUG
                 Console.WriteLine("Running... Press CTRL + C to exit.");
@@ -92,6 +93,10 @@
 
             builder
                 .RegisterType<Runner>()
+                .SingleInstance();
+
+            builder
+                .RegisterType<PeerFactory>()
                 .SingleInstance();
 
             builder
