@@ -1,7 +1,9 @@
 ﻿namespace Blockchain
 {
     using System;
+    using System.Buffers;
     using System.Net.WebSockets;
+    using System.Runtime.InteropServices;
     using System.Text.Json;
     using System.Text.Json.Serialization;
     using System.Threading;
@@ -38,22 +40,76 @@
         {
             _logger.LogInformation("Starting {TaskName}.", nameof(Runner));
 
-            await Bla(ct);
-
-            // TODO: Implement
+            await ConnectAndListen(ct);
         }
 
-        private async Task Bla(
+        private async Task ConnectAndListen(
             CancellationToken ct)
         {
-            var ws = new ClientWebSocket();
             var peer = "127.0.0.1:8080";
 
+            while (ct.IsCancellationRequested == false)
+            {
+                var ws = new ClientWebSocket();
+
+                try
+                {
+                    await ConnectAsync(peer, ws, ct);
+                    await IdentifyAsync(ws, ct);
+
+                    while (ws.State == WebSocketState.Open && ct.IsCancellationRequested == false)
+                    {
+                        var buffer = new byte[4000];
+                        var result = await ws.ReceiveAsync(buffer, ct);
+
+                        if (result.EndOfMessage)
+                            await Dispatch(result, buffer);
+                    }
+                }
+                catch (WebSocketException ex)
+                {
+                    _logger.LogError(ex, ex.Message);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogCritical(ex, ex.Message);
+                    return;
+                }
+                finally
+                {
+                    ws.Dispose();
+                }
+            }
+        }
+
+        private async Task Dispatch(WebSocketReceiveResult result, byte[] buffer)
+        {
+            var message = JsonSerializer.Deserialize<Message<object>>(new ReadOnlySpan<byte>(buffer, 0, result.Count), _serializerOptions);
+            _logger.LogDebug("Incoming Message: {@Message}", message);
+        }
+
+        private async Task ConnectAsync(
+            string peer,
+            ClientWebSocket ws,
+            CancellationToken ct)
+        {
             _logger.LogDebug("Connecting to {Peer}", peer);
+
             await ws.ConnectAsync(new Uri($"ws://{peer}"), ct);
-            await Task.Delay(500, ct);
+
+            _logger.LogDebug("Connection is {ConnectionState}", ws.State);
+        }
+
+        private async Task IdentifyAsync(
+            WebSocket ws,
+            CancellationToken ct)
+        {
+            if (ws.State != WebSocketState.Open)
+                return;
 
             _logger.LogDebug("Sending identity");
+
+            // TODO: Get sensible values
             await SendAsync(
                 new Identify(
                     identity: "GhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGho=",
@@ -66,10 +122,6 @@
                     sequence: 23123),
                 ws,
                 ct);
-
-            Console.WriteLine(ws.State);
-
-            Console.ReadLine();
         }
 
         private static async Task SendAsync<T>(

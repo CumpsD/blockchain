@@ -2,6 +2,12 @@
 {
     internal enum InternalMessageType
     {
-        Identity
+        Identity,
+        Signal,
+        SignalRequest,
+        PeerList,
+        PeerListRequest,
+        CannotSatisfyRequest,
+        Disconnecting,
     }
 }

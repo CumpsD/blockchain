@@ -14,6 +14,15 @@
         [JsonPropertyName("payload")]
         public T Payload { get; }
 
+        [JsonConstructor]
+        public Message(
+            InternalMessageType type,
+            object payload)
+        {
+            Type = type;
+            Payload = (T)payload;
+        }
+
         public Message(
             InternalMessageType type,
             T payload)
