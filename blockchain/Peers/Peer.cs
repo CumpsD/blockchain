@@ -1,7 +1,9 @@
 ﻿namespace Blockchain.Peers
 {
     using System;
+    using System.Buffers;
     using System.Net.WebSockets;
+    using System.Runtime.InteropServices;
     using System.Text;
     using System.Text.Json;
     using System.Text.Json.Serialization;
@@ -13,6 +15,8 @@
 
     public partial class Peer
     {
+        private const int RECEIVE_CHUNK_SIZE = 1000;
+
         private static readonly JsonSerializerOptions _serializerOptions = new()
         {
             Converters =
@@ -30,12 +34,16 @@
             }
         };
 
-        private readonly SemaphoreSlim _sendLock = new(1, 1);
         private readonly ILogger<Peer> _logger;
+
+        private readonly SemaphoreSlim _sendLock = new(1, 1);
+
         private readonly BlockchainConfiguration _configuration;
+
         private readonly PeerPool _peerPool;
 
         private ClientWebSocket? _ws;
+
         private bool _shouldDisconnect;
 
         public string? Identity { get; private set; }
@@ -72,6 +80,8 @@
         public async Task ConnectAndListen(
             CancellationToken ct)
         {
+            var resultProcessor = new WebSocketReceiveResultProcessor();
+
             while (ct.IsCancellationRequested == false && !_shouldDisconnect)
             {
                 try
@@ -97,14 +107,21 @@
 
                     while (_ws?.State == WebSocketState.Open && ct.IsCancellationRequested == false)
                     {
-                        var buffer = new byte[50000];
-                        var result = await _ws.ReceiveAsync(buffer, ct);
+                        var buffer = ArrayPool<byte>.Shared.Rent(RECEIVE_CHUNK_SIZE);
 
-                        if (result.EndOfMessage)
+                        var result = await _ws.ReceiveAsync(buffer, ct);
+                        var isEndOfMessage = resultProcessor.Receive(result, buffer, out var frame);
+
+                        if (isEndOfMessage)
+                        {
+                            if (frame.IsEmpty)
+                                break; // End of message with no data means socket closed - break so we can reconnect.
+
                             await Dispatch(
                                 result,
-                                buffer,
+                                frame,
                                 ct);
+                        }
                     }
 
                     _logger.LogTrace(
@@ -127,6 +144,7 @@
                 }
                 finally
                 {
+                    resultProcessor.Dispose();
                     _ws?.Dispose();
                     _ws = null;
                 }
@@ -135,7 +153,7 @@
 
         private async Task Dispatch(
             WebSocketReceiveResult result,
-            byte[] buffer,
+            ReadOnlySequence<byte> frame,
             CancellationToken ct)
         {
             if (result.MessageType != WebSocketMessageType.Text)
@@ -146,8 +164,14 @@
             try
             {
                 message = JsonSerializer.Deserialize<Message>(
-                    new ReadOnlySpan<byte>(buffer, 0, result.Count),
+                    frame.ToArray(),
                     _deserializerOptions);
+
+                foreach (var chunk in frame)
+                {
+                    if (MemoryMarshal.TryGetArray(chunk, out var segment) && segment.Array != null)
+                        ArrayPool<byte>.Shared.Return(segment.Array);
+                }
             }
             catch (Exception ex)
             {
@@ -155,7 +179,7 @@
                     ex,
                     "[{Address,15}] Invalid incoming message: {@Message}",
                     Address,
-                    Encoding.UTF8.GetString(buffer));
+                    Encoding.UTF8.GetString(frame.ToArray()));
             }
 
             if (message == null)
@@ -226,6 +250,82 @@
 
             _ws?.Dispose();
             _ws = null;
+        }
+    }
+
+    public class Chunk<T> : ReadOnlySequenceSegment<T>
+    {
+        public Chunk(ReadOnlyMemory<T> memory)
+            => Memory = memory;
+
+        public Chunk<T> Add(ReadOnlyMemory<T> memory)
+        {
+            var segment = new Chunk<T>(memory)
+            {
+                RunningIndex = RunningIndex + Memory.Length
+            };
+
+            Next = segment;
+            return segment;
+        }
+    }
+
+    public sealed class WebSocketReceiveResultProcessor : IDisposable
+    {
+        Chunk<byte>? _startChunk;
+        Chunk<byte>? _currentChunk;
+
+        public bool Receive(
+            WebSocketReceiveResult result,
+            ArraySegment<byte> buffer,
+            out ReadOnlySequence<byte> frame)
+        {
+            if (result.EndOfMessage && result.MessageType == WebSocketMessageType.Close)
+            {
+                frame = default;
+                return false;
+            }
+
+            // If not using array pool, take a local copy to avoid corruption as buffer is reused by caller.
+            var slice = buffer[..result.Count];
+
+            if (_startChunk == null)
+                _startChunk = _currentChunk = new Chunk<byte>(slice);
+            else
+                _currentChunk = _currentChunk.Add(slice);
+
+            if (result.EndOfMessage && _startChunk != null)
+            {
+
+                frame = _startChunk.Next == null
+                    ? new ReadOnlySequence<byte>(_startChunk.Memory)
+                    : new ReadOnlySequence<byte>(_startChunk, 0, _currentChunk, _currentChunk.Memory.Length);
+
+                // Reset so we can accept new chunks from scratch.
+                _startChunk = _currentChunk = null;
+                return true;
+            }
+            else
+            {
+                frame = default;
+                return false;
+            }
+        }
+
+        public void Dispose()
+        {
+            var chunk = _startChunk;
+
+            while (chunk != null)
+            {
+                if (MemoryMarshal.TryGetArray(chunk.Memory, out var segment) && segment.Array != null)
+                    ArrayPool<byte>.Shared.Return(segment.Array);
+
+                chunk = (Chunk<byte>)chunk.Next;
+            }
+
+            // Suppress finalization.
+            GC.SuppressFinalize(this);
         }
     }
 }
