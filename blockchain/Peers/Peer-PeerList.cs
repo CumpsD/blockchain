@@ -26,8 +26,8 @@
                         peer.Port))
                 .ToArray();
 
-            _logger.LogDebug(
-                "[{Address}] Sending peer list ({TotalPeers} peers)",
+            _logger.LogTrace(
+                "[{Address,15}] Sending peer list ({TotalPeers} peers)",
                 Address,
                 peers.Length);
 
@@ -40,8 +40,8 @@
             Message<PeerListMessage> peerListMessage,
             CancellationToken ct)
         {
-            _logger.LogDebug(
-                "[{Address}] Received peer list ({TotalPeers} peers)",
+            _logger.LogTrace(
+                "[{Address,15}] Received peer list ({TotalPeers} peers)",
                 Address,
                 peerListMessage.Payload.ConnectedPeers.Length);
 

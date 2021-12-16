@@ -15,8 +15,8 @@
             if (_ws is not { State: WebSocketState.Open })
                 return;
 
-            _logger.LogDebug(
-                "[{Address}] Requesting peer list from {Identity} / {Name}",
+            _logger.LogTrace(
+                "[{Address,15}] Requesting peer list from {Identity} / {Name}",
                 Address,
                 Identity,
                 string.IsNullOrWhiteSpace(Name) ? "*" : Name);

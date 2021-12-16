@@ -128,7 +128,7 @@
             {
                 _logger.LogError(
                     ex,
-                    "[{Address}] Invalid incoming message: {@Message}",
+                    "[{Address,15}] Invalid incoming message: {@Message}",
                     Address,
                     Encoding.UTF8.GetString(buffer));
             }
@@ -136,8 +136,8 @@
             if (message == null)
                 return;
 
-            _logger.LogDebug(
-                "[{Address}] Incoming Message: {@Message}",
+            _logger.LogTrace(
+                "[{Address,15}] Incoming Message: {@Message}",
                 Address,
                 message);
 
@@ -168,8 +168,8 @@
 
             var outgoingMessage = message.CreateMessage();
 
-            _logger.LogDebug(
-                "[{Address}] Outgoing Message: {@Message}",
+            _logger.LogTrace(
+                "[{Address,15}] Outgoing Message: {@Message}",
                 Address,
                 outgoingMessage);
 

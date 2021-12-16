@@ -37,5 +37,12 @@
             get;
             [UsedImplicitly] init;
         }
+
+        [Required, NotNull]
+        public int? PrintPeerInfoIntervalInSeconds
+        {
+            get;
+            [UsedImplicitly] init;
+        }
     }
 }

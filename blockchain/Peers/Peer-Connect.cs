@@ -14,8 +14,8 @@
             if (_ws == null)
                 return false;
 
-            _logger.LogDebug(
-                "[{Address}] Connecting to {Peer}",
+            _logger.LogTrace(
+                "[{Address,15}] Connecting to {Peer}",
                 Address,
                 peer);
 
@@ -23,8 +23,8 @@
             {
                 await _ws.ConnectAsync(new Uri($"ws://{peer}"), ct);
 
-                _logger.LogDebug(
-                    "[{Address}] Connection is {ConnectionState}",
+                _logger.LogTrace(
+                    "[{Address,15}] Connection is {ConnectionState}",
                     Address,
                     _ws.State);
 
@@ -34,7 +34,7 @@
             {
                 _logger.LogError(
                     ex,
-                    "[{Address}] Connection is {ConnectionState}",
+                    "[{Address,15}] Connection is {ConnectionState}",
                     Address,
                     _ws.State);
 

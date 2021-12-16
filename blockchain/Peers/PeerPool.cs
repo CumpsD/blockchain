@@ -22,6 +22,12 @@
             _peerFactory = peerFactory;
         }
 
+        public int GetPeerCount()
+            => Peers.Count;
+
+        public IEnumerable<Peer> GetPeers()
+            => Peers.Values.AsEnumerable();
+
         public void AddPeer(
             string? address,
             int port,
@@ -36,7 +42,7 @@
                 return;
 
             _logger.LogDebug(
-                "[{Address}] Adding peer {Address}:{Port} ({Identity} / {Name})",
+                "[{Address,15}] Adding peer {Address}:{Port} ({Identity} / {Name})",
                 address,
                 address,
                 port,
@@ -55,10 +61,7 @@
             peer.ConnectAndListen(ct);
         }
 
-        public List<Peer> GetPeers()
-            => Peers.Values.ToList();
-
-        public void UpdatePeers(CancellationToken ct)
+        public void UpdatePeerLists(CancellationToken ct)
         {
             foreach (var peer in Peers.Values)
                 peer.PeerListRequestAsync(ct);
@@ -75,7 +78,7 @@
             var peer = Peers[address];
 
             _logger.LogDebug(
-                "[{Address}] Removing peer {Address}:{Port} ({Identity} / {Name})",
+                "[{Address,15}] Removing peer {Address}:{Port} ({Identity} / {Name})",
                 peer.Address,
                 peer.Address,
                 peer.Port,

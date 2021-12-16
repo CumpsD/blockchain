@@ -1,6 +1,7 @@
 ﻿namespace Blockchain
 {
     using System;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Configuration;
@@ -17,6 +18,7 @@
         private readonly BlockchainConfiguration _configuration;
 
         private readonly Timer _updatePeerListTimer;
+        private readonly Timer _printPeerInfoTimer;
 
         public Runner(
             ILogger<Runner> logger,
@@ -28,6 +30,7 @@
             _configuration = options.Value ?? throw new ArgumentNullException(nameof(options));
 
             _updatePeerListTimer = new(_configuration.UpdatePeerListIntervalInSeconds.Value * 1000) { AutoReset = true };
+            _printPeerInfoTimer = new(_configuration.PrintPeerInfoIntervalInSeconds.Value * 1000) { AutoReset = true };
         }
 
         public async Task StartAsync(
@@ -43,10 +46,18 @@
             _updatePeerListTimer.Elapsed += (_, _) => UpdatePeerList(ct);
             _updatePeerListTimer.Start();
 
+            _printPeerInfoTimer.Elapsed += (_, _) => PrintPeerInfo();
+            _printPeerInfoTimer.Start();
+
             await Task.Delay(-1, ct);
         }
 
         private void UpdatePeerList(CancellationToken ct)
-            => _peerPool.UpdatePeers(ct);
+            => _peerPool.UpdatePeerLists(ct);
+
+        private void PrintPeerInfo()
+            => _logger.LogInformation(
+                "Connected to {NumberOfPeers} peers.",
+                _peerPool.GetPeerCount());
     }
 }

@@ -14,8 +14,8 @@
             if (_ws is not { State: WebSocketState.Open })
                 return;
 
-            _logger.LogDebug(
-                "[{Address}] Sending identity",
+            _logger.LogTrace(
+                "[{Address,15}] Sending identity",
                 Address);
 
             // TODO: Get sensible values
@@ -36,8 +36,8 @@
         {
             var payLoad = identityMessage.Payload;
 
-            _logger.LogDebug(
-                "[{Address}] Updating identity {Identity}",
+            _logger.LogTrace(
+                "[{Address,15}] Updating identity {Identity}",
                 Address,
                 payLoad.Identity);
 
