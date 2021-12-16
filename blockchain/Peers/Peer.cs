@@ -10,6 +10,7 @@
     using System.Threading;
     using System.Threading.Tasks;
     using Configuration;
+    using Loggers;
     using Messages;
     using Microsoft.Extensions.Logging;
 
@@ -35,6 +36,9 @@
         };
 
         private readonly ILogger<Peer> _logger;
+        private readonly ILogger<ConnectedLogger> _connectedLogger;
+        private readonly ILogger<DisconnectedLogger> _disconnectedLogger;
+        private readonly ILogger<NewBlockLogger> _newBlockLogger;
 
         private readonly SemaphoreSlim _sendLock = new(1, 1);
 
@@ -61,6 +65,9 @@
 
         public Peer(
             ILogger<Peer> logger,
+            ILogger<ConnectedLogger> connectedLogger,
+            ILogger<DisconnectedLogger> disconnectedLogger,
+            ILogger<NewBlockLogger> newBlockLogger,
             BlockchainConfiguration configuration,
             PeerPool peerPool,
             string address,
@@ -69,6 +76,9 @@
             string? name)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _connectedLogger = connectedLogger ?? throw new ArgumentNullException(nameof(connectedLogger));
+            _disconnectedLogger = disconnectedLogger ?? throw new ArgumentNullException(nameof(disconnectedLogger));
+            _newBlockLogger = newBlockLogger ?? throw new ArgumentNullException(nameof(newBlockLogger));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _peerPool = peerPool ?? throw new ArgumentNullException(nameof(peerPool));
             Address = address ?? throw new ArgumentNullException(nameof(address));
@@ -133,6 +143,10 @@
                 {
                     return;
                 }
+                catch (ObjectDisposedException)
+                {
+                    return;
+                }
                 catch (WebSocketException ex)
                 {
                     _logger.LogError(ex, ex.Message);
@@ -175,7 +189,7 @@
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(
+                _logger.LogTrace(
                     ex,
                     "[{Address,15}] Invalid incoming message: {@Message}",
                     Address,

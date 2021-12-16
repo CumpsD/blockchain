@@ -24,7 +24,7 @@
             // TODO: Get sensible values
             await SendAsync(
                 new IdentityMessage(
-                    identity: "yM9Gk00zKfXuoD0u+f9xUyi5gmBSSQjzkg+15HTXSUg=", //"GhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGho=",
+                    identity: "wlTdnrKAQoPKeRn32fM9qUHnE4g5RrmBsYPuLcUGOT4=", //"GhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGho=",
                     version: VERSION_PROTOCOL,
                     agent: "if/cli/src",
                     name: "testnet",
@@ -55,7 +55,7 @@
                 return;
             }
 
-            _logger.LogInformation(
+            _connectedLogger.LogInformation(
                 "[{Address,15}] Connected to {Identity} / {Name} ({Address}:{Port})",
                 Address,
                 payLoad.Identity,

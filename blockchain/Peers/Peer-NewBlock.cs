@@ -8,10 +8,19 @@
         private void HandleNewBlock(
             Message<NewBlockMessage> newBlockMessage)
         {
-            //_logger.LogTrace(
-            //    "[{Address,15}] New block from {Peer} - {Sequence}",
-            //    Address,
-            //    newBlockMessage.Payload.Block.Header.Sequence);
+            _logger.LogTrace(
+                "[{Address,15}] New block from {Identity} / {Name}) - {Sequence}",
+                Address,
+                Identity,
+                string.IsNullOrWhiteSpace(Name) ? "*" : Name,
+                newBlockMessage.Payload.Block.Header.Sequence);
+
+            _newBlockLogger.LogDebug(
+                "[{Address,15}] New block from {Identity} / {Name}) - {Sequence}",
+                Address,
+                Identity,
+                string.IsNullOrWhiteSpace(Name) ? "*" : Name,
+                newBlockMessage.Payload.Block.Header.Sequence);
         }
     }
 }

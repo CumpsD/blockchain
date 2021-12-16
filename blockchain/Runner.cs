@@ -4,6 +4,7 @@
     using System.Threading;
     using System.Threading.Tasks;
     using Configuration;
+    using Loggers;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
     using Peers;
@@ -12,6 +13,8 @@
     public class Runner
     {
         private readonly ILogger<Runner> _logger;
+        private readonly ILogger<PeerSummaryLogger> _peerSummaryLogger;
+
         private readonly PeerPool _peerPool;
 
         private readonly BlockchainConfiguration _configuration;
@@ -21,10 +24,12 @@
 
         public Runner(
             ILogger<Runner> logger,
+            ILogger<PeerSummaryLogger> peerSummaryLogger,
             IOptions<BlockchainConfiguration> options,
             PeerPool peerPool)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _peerSummaryLogger = peerSummaryLogger ?? throw new ArgumentNullException(nameof(peerSummaryLogger));
             _peerPool = peerPool ?? throw new ArgumentNullException(nameof(peerPool));
             _configuration = options.Value ?? throw new ArgumentNullException(nameof(options));
 
@@ -69,7 +74,7 @@
             => _peerPool.UpdatePeerLists(ct);
 
         private void PrintPeerInfo()
-            => _logger.LogInformation(
+            => _peerSummaryLogger.LogInformation(
                 "Connected to {NumberOfPeers} peers.",
                 _peerPool.GetConnectedPeerCount());
     }

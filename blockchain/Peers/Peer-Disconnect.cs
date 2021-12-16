@@ -8,7 +8,7 @@
         private void HandleDisconnecting(
             Message<DisconnectingMessage> disconnectingMessage)
         {
-            _logger.LogTrace(
+            _disconnectedLogger.LogInformation(
                 "[{Address,15}] Disconnecting from {Peer} - {Reason}",
                 Address,
                 disconnectingMessage.Payload.SourceIdentity,

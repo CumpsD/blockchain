@@ -23,11 +23,11 @@
         public SerializedBlockHeader Header { get; }
 
         [JsonPropertyName("transactions")]
-        public byte[] Transactions { get; }
+        public JsonBuffer[] Transactions { get; }
 
         public SerializedBlock(
             SerializedBlockHeader header,
-            byte[] transactions)
+            JsonBuffer[] transactions)
         {
             Header = header ?? throw new ArgumentNullException(nameof(header));
             Transactions = transactions ?? throw new ArgumentNullException(nameof(transactions));
@@ -37,10 +37,16 @@
     public class SerializedBlockHeader
     {
         [JsonPropertyName("sequence")]
-        public long Sequence { get; }
+        public int Sequence { get; }
 
         [JsonPropertyName("previousBlockHash")]
         public string PreviousBlockHash { get; }
+
+        [JsonPropertyName("noteCommitment")]
+        public NoteCommitment NoteCommitment { get; set; }
+
+        [JsonPropertyName("nullifierCommitment")]
+        public NullifierCommitment NullifierCommitment { get; set; }
 
         [JsonPropertyName("target")]
         public string Target { get; }
@@ -52,7 +58,7 @@
         public long Timestamp { get; }
 
         [JsonPropertyName("minersFee")]
-        public long MinersFee { get; }
+        public string MinersFee { get; }
 
         [JsonPropertyName("work")]
         public string Work { get; }
@@ -64,18 +70,22 @@
         public string Graffiti { get; }
 
         public SerializedBlockHeader(
-            long sequence,
+            int sequence,
             string previousBlockHash,
+            NoteCommitment noteCommitment,
+            NullifierCommitment nullifierCommitment,
             string target,
             long randomness,
             long timestamp,
-            long minersFee,
+            string minersFee,
             string work,
             string hash,
             string graffiti)
         {
             Sequence = sequence;
             PreviousBlockHash = previousBlockHash ?? throw new ArgumentNullException(nameof(previousBlockHash));
+            NoteCommitment = noteCommitment ?? throw new ArgumentNullException(nameof(noteCommitment));
+            NullifierCommitment = nullifierCommitment ?? throw new ArgumentNullException(nameof(nullifierCommitment));
             Target = target ?? throw new ArgumentNullException(nameof(target));
             Randomness = randomness;
             Timestamp = timestamp;
@@ -83,6 +93,57 @@
             Work = work ?? throw new ArgumentNullException(nameof(work));
             Hash = hash ?? throw new ArgumentNullException(nameof(hash));
             Graffiti = graffiti ?? throw new ArgumentNullException(nameof(graffiti));
+        }
+    }
+
+    public class NoteCommitment
+    {
+        [JsonPropertyName("commitment")]
+        public JsonBuffer Commitment { get; }
+
+        [JsonPropertyName("size")]
+        public int Size { get; }
+
+        public NoteCommitment(
+            JsonBuffer commitment,
+            int size)
+        {
+            Commitment = commitment ?? throw new ArgumentNullException(nameof(commitment));
+            Size = size;
+        }
+    }
+
+    public class NullifierCommitment
+    {
+        [JsonPropertyName("commitment")]
+        public string Commitment { get; }
+
+        [JsonPropertyName("size")]
+        public int Size { get; }
+
+        public NullifierCommitment(
+            string commitment,
+            int size)
+        {
+            Commitment = commitment ?? throw new ArgumentNullException(nameof(commitment));
+            Size = size;
+        }
+    }
+
+    public class JsonBuffer
+    {
+        [JsonPropertyName("type")]
+        public string Type { get; }
+
+        [JsonPropertyName("data")]
+        public int[] Data { get; }
+
+        public JsonBuffer(
+            string type,
+            int[] data)
+        {
+            Type = type ?? throw new ArgumentNullException(nameof(type));
+            Data = data ?? throw new ArgumentNullException(nameof(data));
         }
     }
 }
