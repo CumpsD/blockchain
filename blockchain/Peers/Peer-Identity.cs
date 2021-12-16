@@ -8,6 +8,9 @@
 
     public partial class Peer
     {
+        private const int VERSION_PROTOCOL = 12;
+        private const int VERSION_PROTOCOL_MIN = 12;
+
         private async Task IdentityAsync(
             CancellationToken ct)
         {
@@ -22,7 +25,7 @@
             await SendAsync(
                 new IdentityMessage(
                     identity: "yM9Gk00zKfXuoD0u+f9xUyi5gmBSSQjzkg+15HTXSUg=", //"GhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGho=",
-                    version: 11,
+                    version: VERSION_PROTOCOL,
                     agent: "if/cli/src",
                     name: "testnet",
                     port: 9033,
@@ -35,6 +38,22 @@
         private void HandleIdentity(Message<IdentityMessage> identityMessage)
         {
             var payLoad = identityMessage.Payload;
+
+            if (payLoad.Version < VERSION_PROTOCOL_MIN)
+            {
+                _logger.LogTrace(
+                    "[{Address,15}] Peer {Identity} does not meet minimum protocol version, has {Version}, needs {MinVersion}",
+                    Address,
+                    payLoad.Identity,
+                    payLoad.Version,
+                    VERSION_PROTOCOL_MIN);
+
+                _peerPool.RemovePeer(
+                    Address,
+                    "Invalid protocol version");
+
+                return;
+            }
 
             _logger.LogInformation(
                 "[{Address,15}] Connected to {Identity} / {Name} ({Address}:{Port})",
