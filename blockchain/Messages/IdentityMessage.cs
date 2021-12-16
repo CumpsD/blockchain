@@ -66,6 +66,6 @@
         }
 
         public Message<IdentityMessage> CreateMessage()
-            => new(InternalMessageType.Identity, this);
+            => new(MessageType.Identity, this);
     }
 }

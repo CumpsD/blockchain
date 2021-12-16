@@ -192,23 +192,28 @@
 
             switch (message.Type)
             {
-                case InternalMessageType.Identity:
+                case MessageType.Identity:
                     var identityMessage = (Message<IdentityMessage>)message;
                     HandleIdentity(identityMessage);
                     break;
 
-                case InternalMessageType.PeerListRequest:
+                case MessageType.PeerListRequest:
                     await HandlePeerListRequest(ct);
                     break;
 
-                case InternalMessageType.PeerList:
+                case MessageType.PeerList:
                     var peerListMessage = (Message<PeerListMessage>)message;
                     HandlePeerList(peerListMessage, ct);
                     break;
 
-                case InternalMessageType.Disconnecting:
+                case MessageType.Disconnecting:
                     var disconnectingMessage = (Message<DisconnectingMessage>)message;
                     HandleDisconnecting(disconnectingMessage);
+                    break;
+
+                case MessageType.NewBlock:
+                    var newBlockMessage = (Message<NewBlockMessage>)message;
+                    HandleNewBlock(newBlockMessage);
                     break;
             }
         }

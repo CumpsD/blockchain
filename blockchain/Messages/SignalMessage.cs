@@ -35,6 +35,6 @@
         }
 
         public Message<SignalMessage> CreateMessage()
-            => new(InternalMessageType.Signal, this);
+            => new(MessageType.Signal, this);
     }
 }

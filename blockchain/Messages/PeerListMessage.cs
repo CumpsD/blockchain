@@ -14,7 +14,7 @@
         }
 
         public Message<PeerListMessage> CreateMessage()
-            => new(InternalMessageType.PeerList, this);
+            => new(MessageType.PeerList, this);
     }
 
     public class ConnectedPeer

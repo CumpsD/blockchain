@@ -40,27 +40,30 @@
             if (readerClone.TokenType != JsonTokenType.String)
                 throw new JsonException();
 
-            var typeDiscriminator = Enum.Parse<InternalMessageType>(readerClone.GetString(), true);
+            var typeDiscriminator = Enum.Parse<MessageType>(readerClone.GetString(), true);
 
             return typeDiscriminator switch
             {
-                InternalMessageType.Disconnecting
+                MessageType.Disconnecting
                     => JsonSerializer.Deserialize<Message<DisconnectingMessage>>(ref reader, _serializerOptions),
 
-                InternalMessageType.Identity
+                MessageType.Identity
                     => JsonSerializer.Deserialize<Message<IdentityMessage>>(ref reader, _serializerOptions),
 
-                InternalMessageType.PeerList
+                MessageType.PeerList
                     => JsonSerializer.Deserialize<Message<PeerListMessage>>(ref reader, _serializerOptions),
 
-                InternalMessageType.PeerListRequest
+                MessageType.PeerListRequest
                     => JsonSerializer.Deserialize<Message<PeerListRequestMessage>>(ref reader, _serializerOptions),
 
-                InternalMessageType.Signal
+                MessageType.Signal
                     => JsonSerializer.Deserialize<Message<SignalMessage>>(ref reader, _serializerOptions),
 
-                InternalMessageType.SignalRequest
+                MessageType.SignalRequest
                     => JsonSerializer.Deserialize<Message<SignalRequestMessage>>(ref reader, _serializerOptions),
+
+                MessageType.NewBlock
+                    => JsonSerializer.Deserialize<Message<NewBlockMessage>>(ref reader, _serializerOptions),
 
                 _ => JsonSerializer.Deserialize<Message>(ref reader, _serializerOptions),
             };

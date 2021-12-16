@@ -1,6 +1,6 @@
 ﻿namespace Blockchain.Messages
 {
-    public enum InternalMessageType
+    public enum MessageType
     {
         Identity,
         Signal,
@@ -9,5 +9,12 @@
         PeerListRequest,
         CannotSatisfyRequest,
         Disconnecting,
+
+        //Note,
+        //Nullifier,
+        NewBlock,
+        //NewTransaction,
+        //GetBlockHashes,
+        //GetBlocks,
     }
 }

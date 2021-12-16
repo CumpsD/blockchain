@@ -49,6 +49,6 @@
         }
 
         public Message<DisconnectingMessage> CreateMessage()
-            => new(InternalMessageType.Disconnecting, this);
+            => new(MessageType.Disconnecting, this);
     }
 }

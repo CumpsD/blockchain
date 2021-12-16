@@ -3,6 +3,6 @@
     public class PeerListRequestMessage : IMessage<PeerListRequestMessage>
     {
         public Message<PeerListRequestMessage> CreateMessage()
-            => new(InternalMessageType.PeerListRequest, this);
+            => new(MessageType.PeerListRequest, this);
     }
 }

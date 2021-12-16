@@ -26,6 +26,6 @@
         }
 
         public Message<SignalRequestMessage> CreateMessage()
-            => new(InternalMessageType.SignalRequest, this);
+            => new(MessageType.SignalRequest, this);
     }
 }

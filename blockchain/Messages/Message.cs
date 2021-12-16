@@ -8,13 +8,13 @@
     {
         // ReSharper disable once MemberCanBePrivate.Global
         [JsonPropertyName("type")]
-        public InternalMessageType Type { get; }
+        public MessageType Type { get; }
 
         protected Message(
-            InternalMessageType type)
+            MessageType type)
         {
-            if (!Enum.IsDefined(typeof(InternalMessageType), type))
-                throw new InvalidEnumArgumentException(nameof(type), (int)type, typeof(InternalMessageType));
+            if (!Enum.IsDefined(typeof(MessageType), type))
+                throw new InvalidEnumArgumentException(nameof(type), (int)type, typeof(MessageType));
 
             Type = type;
         }
@@ -27,7 +27,7 @@
         public T Payload { get; }
 
         public Message(
-            InternalMessageType type,
+            MessageType type,
             T payload) : base(type)
         {
             Payload = payload;
