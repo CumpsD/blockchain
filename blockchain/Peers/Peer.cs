@@ -46,6 +46,11 @@
 
         public int Port { get; private set; }
 
+        public bool IsConnected
+        {
+            get => _ws is { State: WebSocketState.Open };
+        }
+
         public Peer(
             ILogger<Peer> logger,
             BlockchainConfiguration configuration,
@@ -75,7 +80,10 @@
 
                     var connected = await ConnectAsync($"{Address}:{Port}", ct);
                     if (!connected)
+                    {
+                        await Task.Delay(5000, ct);
                         continue;
+                    }
 
                     await IdentityAsync(ct);
 
@@ -90,6 +98,11 @@
                                 buffer,
                                 ct);
                     }
+
+                    _logger.LogTrace(
+                        "[{Address,15}] Connection is {ConnectionState}",
+                        Address,
+                        _ws?.State);
                 }
                 catch (WebSocketException ex)
                 {
@@ -126,7 +139,7 @@
             }
             catch (Exception ex)
             {
-                _logger.LogError(
+                _logger.LogWarning(
                     ex,
                     "[{Address,15}] Invalid incoming message: {@Message}",
                     Address,
@@ -155,6 +168,11 @@
                 case InternalMessageType.PeerList:
                     var peerListMessage = (Message<PeerListMessage>)message;
                     HandlePeerList(peerListMessage, ct);
+                    break;
+
+                case InternalMessageType.Disconnecting:
+                    var disconnectingMessage = (Message<DisconnectingMessage>)message;
+                    HandleDisconnecting(disconnectingMessage);
                     break;
             }
         }

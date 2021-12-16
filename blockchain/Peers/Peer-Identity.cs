@@ -21,10 +21,10 @@
             // TODO: Get sensible values
             await SendAsync(
                 new IdentityMessage(
-                    identity: "GhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGho=",
+                    identity: "yM9Gk00zKfXuoD0u+f9xUyi5gmBSSQjzkg+15HTXSUg=", //"GhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGho=",
                     version: 11,
-                    agent: "csharp",
-                    name: "csharp-node",
+                    agent: "if/cli/src",
+                    name: "testnet",
                     port: 9033,
                     head: "0000000017996e3b061fb7118db7007084000a28306a285f193b2551854343bd",
                     work: "1414804792318651",

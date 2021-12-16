@@ -23,10 +23,10 @@
         }
 
         public int GetPeerCount()
-            => Peers.Count;
+            => Peers.Values.Count(peer => peer.IsConnected);
 
         public IEnumerable<Peer> GetPeers()
-            => Peers.Values.AsEnumerable();
+            => Peers.Values.Where(peer => peer.IsConnected).AsEnumerable();
 
         public void AddPeer(
             string? address,
@@ -63,7 +63,7 @@
 
         public void UpdatePeerLists(CancellationToken ct)
         {
-            foreach (var peer in Peers.Values)
+            foreach (var peer in Peers.Values.Where(peer => peer.IsConnected))
                 peer.PeerListRequestAsync(ct);
         }
 

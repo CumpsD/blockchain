@@ -26,17 +26,17 @@
                 _logger.LogTrace(
                     "[{Address,15}] Connection is {ConnectionState}",
                     Address,
-                    _ws.State);
+                    _ws?.State);
 
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(
+                _logger.LogWarning(
                     ex,
                     "[{Address,15}] Connection is {ConnectionState}",
                     Address,
-                    _ws.State);
+                    _ws?.State);
 
                 _peerPool.RemovePeer(Address);
 
