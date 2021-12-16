@@ -81,7 +81,15 @@
                     var connected = await ConnectAsync($"{Address}:{Port}", ct);
                     if (!connected)
                     {
-                        await Task.Delay(5000, ct);
+                        try
+                        {
+                            await Task.Delay(5000, ct);
+                        }
+                        catch
+                        {
+                            // ignored
+                        }
+
                         continue;
                     }
 
@@ -103,6 +111,10 @@
                         "[{Address,15}] Connection is {ConnectionState}",
                         Address,
                         _ws?.State);
+                }
+                catch (TaskCanceledException)
+                {
+                    return;
                 }
                 catch (WebSocketException ex)
                 {

@@ -36,6 +36,14 @@
         {
             var payLoad = identityMessage.Payload;
 
+            _logger.LogInformation(
+                "[{Address,15}] Connected to {Identity} / {Name} ({Address}:{Port})",
+                Address,
+                payLoad.Identity,
+                string.IsNullOrWhiteSpace(Name) ? "*" : Name,
+                Address,
+                Port);
+
             _logger.LogTrace(
                 "[{Address,15}] Updating identity {Identity}",
                 Address,

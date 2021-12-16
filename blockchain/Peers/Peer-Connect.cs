@@ -32,7 +32,7 @@
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(
+                _logger.LogTrace(
                     ex,
                     "[{Address,15}] Connection is {ConnectionState}",
                     Address,

@@ -1,5 +1,6 @@
 ﻿namespace Blockchain.Peers
 {
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
@@ -12,7 +13,7 @@
         private readonly ILogger<PeerPool> _logger;
         private readonly PeerFactory _peerFactory;
 
-        private Dictionary<string, Peer> Peers { get; } = new();
+        private ConcurrentDictionary<string, Peer> Peers { get; } = new();
 
         public PeerPool(
             ILogger<PeerPool> logger,
@@ -85,7 +86,7 @@
                 peer.Identity,
                 string.IsNullOrWhiteSpace(peer.Name) ? "*" : peer.Name);
 
-            Peers.Remove(address);
+            Peers.Remove(address, out _);
 
             peer.Disconnect();
         }
