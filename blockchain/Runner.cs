@@ -1,7 +1,6 @@
 ﻿namespace Blockchain
 {
     using System;
-    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Configuration;
@@ -38,10 +37,15 @@
         {
             _logger.LogInformation("Starting {TaskName}.", nameof(Runner));
 
-            _peerPool.AddPeer(
-                _configuration.BootstrapNodeAddress,
-                _configuration.BootstrapNodePort.Value,
-                ct: ct);
+            foreach (var bootstrap in _configuration.BootstrapNodeAddresses)
+            {
+                var (address, port) = ParseAddress(bootstrap);
+
+                _peerPool.AddPeer(
+                    address,
+                    port,
+                    ct: ct);
+            }
 
             _updatePeerListTimer.Elapsed += (_, _) => UpdatePeerList(ct);
             _updatePeerListTimer.Start();
@@ -50,6 +54,15 @@
             _printPeerInfoTimer.Start();
 
             await Task.Delay(-1, ct);
+        }
+
+        private (string, int) ParseAddress(string address)
+        {
+            var addressParts = address.Split(':', StringSplitOptions.TrimEntries);
+
+            return (addressParts.Length == 1)
+                ? (addressParts[0], _configuration.DefaultWebsocketPort.Value)
+                : (addressParts[0], int.Parse(addressParts[1]));
         }
 
         private void UpdatePeerList(CancellationToken ct)

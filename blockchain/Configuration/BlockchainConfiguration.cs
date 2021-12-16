@@ -11,14 +11,7 @@
         public const string Section = "Blockchain";
 
         [Required, NotNull]
-        public string? BootstrapNodeAddress
-        {
-            get;
-            [UsedImplicitly] init;
-        }
-
-        [Required, NotNull]
-        public int? BootstrapNodePort
+        public string[]? BootstrapNodeAddresses
         {
             get;
             [UsedImplicitly] init;
