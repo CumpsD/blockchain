@@ -16,7 +16,7 @@
 
             _peerPool.RemovePeer(
                 Address,
-                "Disconnect requested");
+                $"Disconnect requested, {disconnectingMessage.Payload.Reason}");
         }
     }
 }
