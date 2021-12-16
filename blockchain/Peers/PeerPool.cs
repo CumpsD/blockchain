@@ -68,7 +68,9 @@
                 peer.PeerListRequestAsync(ct);
         }
 
-        public void RemovePeer(string? address)
+        public void RemovePeer(
+            string? address,
+            string reason)
         {
             if (address == null)
                 return;
@@ -79,12 +81,13 @@
             var peer = Peers[address];
 
             _logger.LogDebug(
-                "[{Address,15}] Removing peer {Address}:{Port} ({Identity} / {Name})",
+                "[{Address,15}] Removing peer {Address}:{Port} ({Identity} / {Name}) - {Reason}",
                 peer.Address,
                 peer.Address,
                 peer.Port,
                 peer.Identity,
-                string.IsNullOrWhiteSpace(peer.Name) ? "*" : peer.Name);
+                string.IsNullOrWhiteSpace(peer.Name) ? "*" : peer.Name,
+                reason);
 
             Peers.Remove(address, out _);
 

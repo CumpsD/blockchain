@@ -38,7 +38,9 @@
                     Address,
                     _ws?.State);
 
-                _peerPool.RemovePeer(Address);
+                _peerPool.RemovePeer(
+                    Address,
+                    "Connect failed");
 
                 return false;
             }

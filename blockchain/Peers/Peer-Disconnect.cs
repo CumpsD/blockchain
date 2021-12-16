@@ -14,7 +14,9 @@
                 disconnectingMessage.Payload.SourceIdentity,
                 disconnectingMessage.Payload.Reason);
 
-            _peerPool.RemovePeer(Address);
+            _peerPool.RemovePeer(
+                Address,
+                "Disconnect requested");
         }
     }
 }
