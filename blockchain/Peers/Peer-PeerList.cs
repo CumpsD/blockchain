@@ -16,7 +16,7 @@
                 return;
 
             var peers = _peerPool
-                .GetPeers()
+                .GetConnectedPeers()
                 .Where(peer => peer.Identity != null)
                 .Select(peer =>
                     new ConnectedPeer(

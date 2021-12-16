@@ -1,33 +1,44 @@
 ﻿namespace Blockchain.Peers
 {
+    using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
+    using Configuration;
     using JetBrains.Annotations;
     using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Options;
 
     [UsedImplicitly]
     public class PeerPool
     {
         private readonly ILogger<PeerPool> _logger;
         private readonly PeerFactory _peerFactory;
+        private readonly BlockchainConfiguration _configuration;
 
         private ConcurrentDictionary<string, Peer> Peers { get; } = new();
 
         public PeerPool(
             ILogger<PeerPool> logger,
+            IOptions<BlockchainConfiguration> options,
             PeerFactory peerFactory)
         {
-            _logger = logger;
-            _peerFactory = peerFactory;
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _configuration = options.Value ?? throw new ArgumentNullException(nameof(options));
+            _peerFactory = peerFactory ?? throw new ArgumentNullException(nameof(peerFactory));
         }
 
-        public int GetPeerCount()
-            => Peers.Values.Count(peer => peer.IsConnected);
+        public int GetConnectedPeerCount()
+            => Peers
+                .Values
+                .Count(peer => peer.IsConnected);
 
-        public IEnumerable<Peer> GetPeers()
-            => Peers.Values.Where(peer => peer.IsConnected).AsEnumerable();
+        public IEnumerable<Peer> GetConnectedPeers()
+            => Peers
+                .Values
+                .Where(peer => peer.IsConnected)
+                .AsEnumerable();
 
         public void AddPeer(
             string? address,
@@ -41,6 +52,21 @@
 
             if (Peers.ContainsKey(address))
                 return;
+
+            var peerCount = GetConnectedPeerCount();
+            if (peerCount >= _configuration.TargetPeerCount)
+            {
+                _logger.LogTrace(
+                    "[{Address,15}] Not adding peer {Address}:{Port} ({Identity} / {Name}), we have enough ({PeerCount})",
+                    address,
+                    address,
+                    port,
+                    identity,
+                    string.IsNullOrWhiteSpace(name) ? "*" : name,
+                    peerCount);
+
+                return;
+            }
 
             _logger.LogDebug(
                 "[{Address,15}] Adding peer {Address}:{Port} ({Identity} / {Name})",
@@ -64,7 +90,7 @@
 
         public void UpdatePeerLists(CancellationToken ct)
         {
-            foreach (var peer in Peers.Values.Where(peer => peer.IsConnected))
+            foreach (var peer in GetConnectedPeers())
                 peer.PeerListRequestAsync(ct);
         }
 

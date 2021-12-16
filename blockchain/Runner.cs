@@ -58,6 +58,6 @@
         private void PrintPeerInfo()
             => _logger.LogInformation(
                 "Connected to {NumberOfPeers} peers.",
-                _peerPool.GetPeerCount());
+                _peerPool.GetConnectedPeerCount());
     }
 }

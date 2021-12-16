@@ -44,5 +44,12 @@
             get;
             [UsedImplicitly] init;
         }
+
+        [Required, NotNull]
+        public int? TargetPeerCount
+        {
+            get;
+            [UsedImplicitly] init;
+        }
     }
 }
