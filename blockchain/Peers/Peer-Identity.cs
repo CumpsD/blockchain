@@ -1,6 +1,7 @@
 ﻿namespace Blockchain.Peers
 {
     using System.Net.WebSockets;
+    using System.Numerics;
     using System.Threading;
     using System.Threading.Tasks;
     using Messages;
@@ -69,6 +70,10 @@
                 payLoad.Identity);
 
             Identity = payLoad.Identity;
+
+            Work = BigInteger.Parse(payLoad.Work);
+            Sequence = payLoad.Sequence;
+            Head = payLoad.Head;
 
             if (payLoad.Port.HasValue)
                 Port = payLoad.Port.Value;

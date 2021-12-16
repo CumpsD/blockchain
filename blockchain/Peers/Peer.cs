@@ -3,6 +3,7 @@
     using System;
     using System.Buffers;
     using System.Net.WebSockets;
+    using System.Numerics;
     using System.Runtime.InteropServices;
     using System.Text;
     using System.Text.Json;
@@ -57,6 +58,12 @@
         public string Address { get; }
 
         public int Port { get; private set; }
+
+        public BigInteger? Work { get; set; }
+
+        public int? Sequence { get; set; }
+
+        public string? Head { get; set; }
 
         public bool IsConnected
         {
